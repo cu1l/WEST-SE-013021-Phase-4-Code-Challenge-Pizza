@@ -19,8 +19,8 @@ class Restaurant(db.Model, SerializerMixin):
     name = db.Column(db.String)
     address = db.Column(db.String)
 
-    restaurants = db.relationship('RestaurantPizza', backref='restaurant')
-    restaurantpizzas = association_proxy('restaurants', 'pizza')
+    restaurantpizzas = db.relationship('RestaurantPizza', backref='restaurant')
+    pizzas = association_proxy('restaurantpizzas', 'pizza')
 
     def __repr__(self):
         return f'<Restaurant (id={self.id}, name={self.name}, address={self.address})>'
@@ -28,7 +28,7 @@ class Restaurant(db.Model, SerializerMixin):
 
 class Pizza(db.Model, SerializerMixin):
     __tablename__ = 'pizza'
-    serialize_rules = ('-created_at', '-updated_at')
+    serialize_rules = ('-created_at', '-updated_at', '-restaurantpizzas')
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -36,17 +36,15 @@ class Pizza(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    restaurants = db.relationship('RestaurantPizza', backref='pizza')
-    restaurantpizzas = association_proxy('restaurants', 'restaurant')
+    restaurantpizzas = db.relationship('RestaurantPizza', backref='pizza')
+    restaurants = association_proxy('restaurantpizzas', 'restaurant')
 
     def __repr__(self):
         return f'<Pizza (id={self.id}, name={self.name}, ingredients={self.ingredients})>'
-    
-    
-    
+      
 class RestaurantPizza(db.Model, SerializerMixin):
-    __tablename__ = 'restaurantpizza'
-    serialize_rules = ('-created_at', '-updated_at')
+    __tablename__ = 'restaurantpizzas'
+    serialize_rules = ('-created_at', '-updated_at', '-restaurant.restaurantpizzas', '-pizza.restaurantpizzas')
 
     id = db.Column(db.Integer, primary_key=True)
     price = db.Column(db.Integer)
@@ -63,4 +61,4 @@ class RestaurantPizza(db.Model, SerializerMixin):
         return price
 
     def __repr__(self):
-        return f'<RestaurantPizza (id={self.id}, price={self.price})>'
+        return f'<RestaurantPizza (id={self.id}, pizza_id={self.pizza_id}, restaurant_id={self.restaurant_id})>'

@@ -15,8 +15,6 @@ migrate = Migrate(app, db)
 
 db.init_app(app)
 
-api = Api(app)
-
 @app.route('/')
 def index():
     return '<h1>Code challenge</h1>'
@@ -30,7 +28,7 @@ def restaurants():
 def restaurant_get_id(id):
     restaurant = Restaurant.query.filter_by(id=id).first()
     if request.method == 'GET':
-        return restaurant.to_dict(rules=('-restaurantpizzas.restaurants', '-restaurants', 'restaurantpizzas'))
+        return restaurant.to_dict(rules=('-restaurantpizzas', 'pizzas', '-pizzas.restaurantpizzas'))
     if request.method == 'DELETE':
         db.session.delete(restaurant)
         db.session.commit()
@@ -44,7 +42,7 @@ def restaurant_get_id(id):
 @app.route('/pizzas')
 def pizzas():
     pizza_dict = [pizza.to_dict() for pizza in Pizza.query.all()]
-    return jsonify(pizza_dict)
+    return pizza_dict
 
 @app.route("/restaurant_pizzas", methods=['GET', 'POST'])
 def restaurantpizzas():
@@ -55,13 +53,12 @@ def restaurantpizzas():
             restaurant_id = app_json['restaurant_id'],
             pizza_id = app_json['pizza_id']
         )
-    except ValueError as e:
-        print(e)
+    except ValueError:
         return make_response({"error": "validation errors"}, 400)
     
     db.session.add(new_app)
     db.session.commit()
-    dict_new = new_app.to_dict(rules=('-restaurant_id', '-pizza_id'))
+    dict_new = new_app.to_dict(rules=('-restaurant_id', '-pizza_id', '-price'))
     res = make_response(dict_new, 201)
     return res
 
