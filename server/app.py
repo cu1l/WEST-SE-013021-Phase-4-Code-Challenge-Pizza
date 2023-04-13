@@ -23,14 +23,14 @@ def index():
 
 @app.route('/restaurants')
 def restaurants():
-    restaurants_dict = [rest.to_dict(rules=('-restaurantpizzas')) for rest in Restaurant.query.all()]
+    restaurants_dict = [rest.to_dict(rules=('-restaurantpizzas', '-restaurants')) for rest in Restaurant.query.all()]
     return restaurants_dict
 
 @app.route('/restaurants/<int:id>', methods=['GET', 'DELETE'])
 def restaurant_get_id(id):
     restaurant = Restaurant.query.filter_by(id=id).first()
     if request.method == 'GET':
-        return restaurant.to_dict(rules=('-restaurantpizzas'))
+        return restaurant.to_dict(rules=('-restaurantpizzas.restaurants', '-restaurants', 'restaurantpizzas'))
     if request.method == 'DELETE':
         db.session.delete(restaurant)
         db.session.commit()
@@ -44,9 +44,9 @@ def restaurant_get_id(id):
 @app.route('/pizzas')
 def pizzas():
     pizza_dict = [pizza.to_dict() for pizza in Pizza.query.all()]
-    return pizza_dict
+    return jsonify(pizza_dict)
 
-@app.route("/restaurant_pizzas")
+@app.route("/restaurant_pizzas", methods=['GET', 'POST'])
 def restaurantpizzas():
     try:
         app_json = request.get_json()
@@ -55,8 +55,9 @@ def restaurantpizzas():
             restaurant_id = app_json['restaurant_id'],
             pizza_id = app_json['pizza_id']
         )
-    except ValueError:
-        return make_response({"error": "Validation error"}, 400)
+    except ValueError as e:
+        print(e)
+        return make_response({"error": "validation errors"}, 400)
     
     db.session.add(new_app)
     db.session.commit()

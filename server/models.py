@@ -12,6 +12,20 @@ db = SQLAlchemy(metadata=metadata)
 
 # Add models here
 
+class Restaurant(db.Model, SerializerMixin):
+    __tablename__ = 'restaurant'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    address = db.Column(db.String)
+
+    restaurants = db.relationship('RestaurantPizza', backref='restaurant')
+    restaurantpizzas = association_proxy('restaurants', 'pizza')
+
+    def __repr__(self):
+        return f'<Restaurant (id={self.id}, name={self.name}, address={self.address})>'
+    
+
 class Pizza(db.Model, SerializerMixin):
     __tablename__ = 'pizza'
     serialize_rules = ('-created_at', '-updated_at')
@@ -30,9 +44,9 @@ class Pizza(db.Model, SerializerMixin):
     
     
     
-class RestaurantPizza(db.Model):
+class RestaurantPizza(db.Model, SerializerMixin):
     __tablename__ = 'restaurantpizza'
-    serialize_rules = ('-pizza.restaurants', '-created_at', '-updated_at')
+    serialize_rules = ('-created_at', '-updated_at')
 
     id = db.Column(db.Integer, primary_key=True)
     price = db.Column(db.Integer)
@@ -50,18 +64,3 @@ class RestaurantPizza(db.Model):
 
     def __repr__(self):
         return f'<RestaurantPizza (id={self.id}, price={self.price})>'
-    
-
-class Restaurant(db.Model, SerializerMixin):
-    __tablename__ = 'restaurant'
-    serialize_rules = ('-restaurants')
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    address = db.Column(db.String)
-
-    restaurants = db.relationship('RestaurantPizza', backref='restaurant')
-    restaurantpizzas = association_proxy('restaurants', 'pizza')
-
-    def __repr__(self):
-        return f'<Restaurant (id={self.id}, name={self.name}, address={self.address})>'
